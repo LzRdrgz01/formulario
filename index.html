@@ -87,13 +87,14 @@
 
     <button type="submit">📨 Enviar</button>
   </form>
+<!-- justo después del formulario -->
+<div id="mensajeConfirmacion" style="display:none; text-align:center; margin-bottom:15px; color:#FFD700; font-weight:bold;"></div>
 
-  <!-- Firebase SDKs Compat -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-  <script>
-    var firebaseConfig = {
+    const firebaseConfig = {
       apiKey: "AIzaSyBIA-yZ3nnW6svo4VbrLfi-wv44njcAVxg",
       authDomain: "lzplay-peticiones.firebaseapp.com",
       projectId: "lzplay-peticiones",
@@ -102,14 +103,14 @@
       appId: "1:49890129134:web:df795e7df2e3116fe66fff"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    var db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    var tipoSelect = document.getElementById("tipo");
-    var opcionesPeticion = document.getElementById("opcionesPeticion");
+    const tipoSelect = document.getElementById("tipo");
+    const opcionesPeticion = document.getElementById("opcionesPeticion");
 
-    tipoSelect.addEventListener("change", function() {
-      if (this.value === "Petición") {
+    tipoSelect.addEventListener("change", () => {
+      if (tipoSelect.value === "Petición") {
         opcionesPeticion.classList.remove("hidden");
         document.getElementById("tituloContenido").setAttribute("required", "true");
         document.getElementById("anioContenido").setAttribute("required", "true");
@@ -120,15 +121,15 @@
       }
     });
 
-    document.getElementById("formularioLzPlay").addEventListener("submit", function(e) {
+    document.getElementById("formularioLzPlay").addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      var nombreUsuario = document.getElementById("nombreUsuario").value.trim();
-      var tipo = document.getElementById("tipo").value;
-      var mensaje = document.getElementById("mensaje").value.trim();
-      var contenido = tipo === "Petición" ? document.getElementById("contenido").value : null;
-      var titulo = tipo === "Petición" ? document.getElementById("tituloContenido").value.trim() : null;
-      var anio = tipo === "Petición" ? document.getElementById("anioContenido").value : null;
+      const nombreUsuario = document.getElementById("nombreUsuario").value.trim();
+      const tipo = tipoSelect.value;
+      const mensaje = document.getElementById("mensaje").value.trim();
+      const contenido = tipo === "Petición" ? document.getElementById("contenido").value : null;
+      const titulo = tipo === "Petición" ? document.getElementById("tituloContenido").value.trim() : null;
+      const anio = tipo === "Petición" ? document.getElementById("anioContenido").value : null;
 
       if (!nombreUsuario || !tipo || !mensaje) {
         alert("Por favor, completa todos los campos obligatorios.");
@@ -139,25 +140,69 @@
         return;
       }
 
-      db.collection("peticionesLzPlay").add({
-        nombreUsuario: nombreUsuario,
-        tipo: tipo,
-        contenido: contenido,
-        titulo: titulo,
-        anio: anio,
-        mensaje: mensaje,
-        fecha: new Date()
-      })
-      .then(() => {
+      try {
+        await addDoc(collection(db, "peticionesLzPlay"), {
+          nombreUsuario,
+          tipo,
+          contenido,
+          titulo,
+          anio,
+          mensaje,
+          fecha: serverTimestamp()
+        });
         alert("✅ Tu mensaje fue enviado correctamente.");
-        document.getElementById("formularioLzPlay").reset();
+        e.target.reset();
         opcionesPeticion.classList.add("hidden");
-      })
-      .catch((error) => {
-        console.error("Error al enviar mensaje: ", error);
+      } catch (error) {
+        console.error("Error al enviar mensaje:", error);
         alert("❌ Ocurrió un error al enviar tu mensaje. Intenta de nuevo.");
-      });
+      }
     });
+
+      const mensajeConfirmacion = document.getElementById("mensajeConfirmacion");
+
+  document.getElementById("formularioLzPlay").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    // ... obtenemos valores igual
+
+    if (!nombreUsuario || !tipo || !mensaje) {
+      alert("Por favor, completa todos los campos obligatorios.");
+      return;
+    }
+    if (tipo === "Petición" && (!titulo || !anio)) {
+      alert("Por favor, completa el título y año para la petición.");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "peticionesLzPlay"), {
+        nombreUsuario,
+        tipo,
+        contenido,
+        titulo,
+        anio,
+        mensaje,
+        fecha: serverTimestamp()
+      });
+
+      // Mostrar mensaje dinámico
+      mensajeConfirmacion.textContent = tipo + " enviada correctamente ✅";
+      mensajeConfirmacion.style.display = "block";
+
+      e.target.reset();
+      opcionesPeticion.classList.add("hidden");
+
+      // Ocultar mensaje después de 3 segundos
+      setTimeout(() => {
+        mensajeConfirmacion.style.display = "none";
+      }, 3000);
+
+    } catch (error) {
+      console.error("Error al enviar mensaje:", error);
+      alert("❌ Ocurrió un error al enviar tu mensaje. Intenta de nuevo.");
+    }
+  });
   </script>
 </body>
 </html>
