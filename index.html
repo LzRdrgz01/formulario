@@ -106,26 +106,15 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const tipoSelect = document.getElementById("tipo");
+    const mensajeConfirmacion = document.getElementById("mensajeConfirmacion");
     const opcionesPeticion = document.getElementById("opcionesPeticion");
+    const formulario = document.getElementById("formularioLzPlay");
 
-    tipoSelect.addEventListener("change", () => {
-      if (tipoSelect.value === "Petición") {
-        opcionesPeticion.classList.remove("hidden");
-        document.getElementById("tituloContenido").setAttribute("required", "true");
-        document.getElementById("anioContenido").setAttribute("required", "true");
-      } else {
-        opcionesPeticion.classList.add("hidden");
-        document.getElementById("tituloContenido").removeAttribute("required");
-        document.getElementById("anioContenido").removeAttribute("required");
-      }
-    });
-
-    document.getElementById("formularioLzPlay").addEventListener("submit", async (e) => {
+    formulario.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const nombreUsuario = document.getElementById("nombreUsuario").value.trim();
-      const tipo = tipoSelect.value;
+      const tipo = document.getElementById("tipo").value;
       const mensaje = document.getElementById("mensaje").value.trim();
       const contenido = tipo === "Petición" ? document.getElementById("contenido").value : null;
       const titulo = tipo === "Petición" ? document.getElementById("tituloContenido").value.trim() : null;
@@ -150,59 +139,34 @@
           mensaje,
           fecha: serverTimestamp()
         });
-        alert("✅ Tu mensaje fue enviado correctamente.");
-        e.target.reset();
+
+        mensajeConfirmacion.textContent = tipo + " enviada correctamente ✅";
+        mensajeConfirmacion.style.display = "block";
+
+        formulario.reset();
         opcionesPeticion.classList.add("hidden");
+
+        setTimeout(() => {
+          mensajeConfirmacion.style.display = "none";
+        }, 3000);
       } catch (error) {
         console.error("Error al enviar mensaje:", error);
-        alert("❌ Ocurrió un error al enviar tu mensaje. Intenta de nuevo.");
+        alert("❌ Ocurrió un error al enviar tu mensaje:\n" + error.message);
       }
     });
 
-      const mensajeConfirmacion = document.getElementById("mensajeConfirmacion");
-
-  document.getElementById("formularioLzPlay").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    // ... obtenemos valores igual
-
-    if (!nombreUsuario || !tipo || !mensaje) {
-      alert("Por favor, completa todos los campos obligatorios.");
-      return;
-    }
-    if (tipo === "Petición" && (!titulo || !anio)) {
-      alert("Por favor, completa el título y año para la petición.");
-      return;
-    }
-
-    try {
-      await addDoc(collection(db, "peticionesLzPlay"), {
-        nombreUsuario,
-        tipo,
-        contenido,
-        titulo,
-        anio,
-        mensaje,
-        fecha: serverTimestamp()
-      });
-
-      // Mostrar mensaje dinámico
-      mensajeConfirmacion.textContent = tipo + " enviada correctamente ✅";
-      mensajeConfirmacion.style.display = "block";
-
-      e.target.reset();
-      opcionesPeticion.classList.add("hidden");
-
-      // Ocultar mensaje después de 3 segundos
-      setTimeout(() => {
-        mensajeConfirmacion.style.display = "none";
-      }, 3000);
-
-    } catch (error) {
-      console.error("Error al enviar mensaje:", error);
-      alert("❌ Ocurrió un error al enviar tu mensaje. Intenta de nuevo.");
-    }
-  });
+    // Mostrar u ocultar opcionesPeticion según tipo
+    document.getElementById("tipo").addEventListener("change", function() {
+      if (this.value === "Petición") {
+        opcionesPeticion.classList.remove("hidden");
+        document.getElementById("tituloContenido").setAttribute("required", "true");
+        document.getElementById("anioContenido").setAttribute("required", "true");
+      } else {
+        opcionesPeticion.classList.add("hidden");
+        document.getElementById("tituloContenido").removeAttribute("required");
+        document.getElementById("anioContenido").removeAttribute("required");
+      }
+    });
   </script>
 </body>
 </html>
